@@ -1,0 +1,22 @@
+#include <tunables/global>
+profile trade-eval-contestant flags=(attach_disconnected,mediate_deleted) {
+  #include <abstractions/base>
+
+  /proc/cpuinfo r,
+  /proc/meminfo r,
+  /etc/hosts r,
+  /etc/resolv.conf r,
+  /tmp/** rw,
+
+  network inet stream,
+  network inet6 stream,
+
+  deny /proc/** w,
+  deny /sys/** w,
+  deny /dev/mem rw,
+  deny ptrace (trace),
+  deny signal (send) peer=unconfined,
+
+  /app/orderbook rix,
+  /usr/bin/python3 rix,
+}

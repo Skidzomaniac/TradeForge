@@ -1,0 +1,26 @@
+version: "3.8"
+
+networks:
+  trade-eval-net:
+    external: true
+    name: alphaexchange_trade-eval-net
+
+services:
+  contestant-live:
+    image: trade-eval-contestant:sub_019eb81a-f1dd-7bbd-a7b6-12593bd2b66c
+    container_name: contestant-live
+    networks:
+      - trade-eval-net
+    labels:
+      - "trade-eval=contestant"
+      - "submission-id=sub_019eb81a-f1dd-7bbd-a7b6-12593bd2b66c"
+    mem_limit: 512m
+    memswap_limit: 512m
+    cap_drop:
+      - ALL
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m
+    security_opt:
+      - no-new-privileges:true
+    restart: "no"
