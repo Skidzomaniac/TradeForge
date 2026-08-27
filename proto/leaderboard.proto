@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+package tradeeval.leaderboard;
+
+option go_package = "github.com/trade-eval/proto/gen/go/leaderboard;leaderboardpb";
+
+// LeaderboardEntry is one ranked contestant row.
+message LeaderboardEntry {
+  int32 rank = 1;
+  string contestant_id = 2;
+  string contestant_name = 3;
+  double score = 4;
+  int64 p50_us = 5;
+  int64 p90_us = 6;
+  int64 p99_us = 7;
+  double tps = 8;
+  double correctness_rate = 9;
+  string status = 10;
+  int64 last_updated_ns = 11;
+}
+
+// LeaderboardUpdate is the full leaderboard snapshot broadcast to clients.
+message LeaderboardUpdate {
+  int64 timestamp = 1;
+  repeated LeaderboardEntry entries = 2;
+}

@@ -1,0 +1,55 @@
+# GraphQL schema for the leaderboard read/subscribe API (P126).
+# Generate resolvers with gqlgen; this schema is the contract.
+
+type Query {
+  leaderboard: [LeaderboardEntry!]!
+  contestant(id: ID!): Contestant
+  test(id: ID!): Test
+  headToHead(contestantA: ID!, contestantB: ID!): HeadToHeadResult!
+}
+
+type Subscription {
+  leaderboardUpdates: LeaderboardUpdate!
+  testProgress(testId: ID!): TestProgressUpdate!
+}
+
+type LeaderboardEntry {
+  rank: Int!
+  contestant: Contestant!
+  score: Float!
+  p50Us: Int!
+  p90Us: Int!
+  p99Us: Int!
+  tps: Float!
+  correctnessRate: Float!
+  status: String!
+}
+
+type LeaderboardUpdate {
+  timestamp: Float!
+  entries: [LeaderboardEntry!]!
+}
+
+type Contestant {
+  id: ID!
+  name: String!
+}
+
+type Test {
+  id: ID!
+  status: String!
+  finalScore: Float
+}
+
+type TestProgressUpdate {
+  testId: ID!
+  p99Us: Int!
+  tps: Float!
+  correctnessRate: Float!
+}
+
+type HeadToHeadResult {
+  a: Contestant!
+  b: Contestant!
+  winner: Contestant
+}

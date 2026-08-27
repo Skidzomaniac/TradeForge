@@ -1,0 +1,48 @@
+syntax = "proto3";
+
+package tradeeval.services;
+
+option go_package = "github.com/trade-eval/proto/gen/go/services;servicespb";
+
+import "telemetry.proto";
+import "test_events.proto";
+import "leaderboard.proto";
+
+// TelemetryIngester offers an optional low-latency direct path in addition to
+// the durable Kafka path (see docs/NORMAL_VS_SMART.md). Generate stubs with
+// `make proto` (requires protoc + protoc-gen-go-grpc).
+service TelemetryIngester {
+  rpc StreamEvents(stream tradeeval.telemetry.OrderEvent) returns (StreamEventsResponse);
+  rpc GetMetrics(GetMetricsRequest) returns (tradeeval.telemetry.LatencyWindow);
+}
+
+message StreamEventsResponse {
+  int64 accepted = 1;
+  int64 dropped = 2;
+}
+
+message GetMetricsRequest {
+  string contestant_id = 1;
+}
+
+service Orchestrator {
+  rpc StartTest(tradeeval.testevents.StartTest) returns (StartTestResponse);
+  rpc StopTest(tradeeval.testevents.StopTest) returns (StopTestResponse);
+}
+
+message StartTestResponse {
+  string test_id = 1;
+  string status = 2;
+}
+
+message StopTestResponse {
+  bool stopped = 1;
+}
+
+service LeaderboardAPI {
+  rpc WatchLeaderboard(WatchLeaderboardRequest) returns (stream tradeeval.leaderboard.LeaderboardUpdate);
+}
+
+message WatchLeaderboardRequest {
+  string contest_id = 1;
+}

@@ -1,0 +1,53 @@
+syntax = "proto3";
+
+package tradeeval.submission;
+
+option go_package = "github.com/trade-eval/proto/gen/go/submission;submissionpb";
+
+// Language identifies the programming language of a contestant submission.
+enum Language {
+  LANGUAGE_UNSPECIFIED = 0;
+  CPP = 1;
+  RUST = 2;
+  GO = 3;
+  PYTHON = 4;
+}
+
+// SubmissionStatus tracks a submission through its build lifecycle.
+enum SubmissionStatus {
+  SUBMISSION_STATUS_UNSPECIFIED = 0;
+  PENDING = 1;
+  BUILDING = 2;
+  READY = 3;
+  FAILED = 4;
+  OOM_KILLED = 5;
+  TIMEOUT = 6;
+}
+
+// Submission is the canonical record of an uploaded contestant program.
+message Submission {
+  string id = 1;
+  string contestant_id = 2;
+  Language language = 3;
+  string s3_key = 4;
+  int64 submitted_at = 5;
+  SubmissionStatus status = 6;
+}
+
+// BuildJob is published to the build-jobs topic by submission-api and
+// consumed by build-worker.
+message BuildJob {
+  string submission_id = 1;
+  string s3_key = 2;
+  Language language = 3;
+}
+
+// BuildResult is published by build-worker once a build finishes
+// (successfully or not).
+message BuildResult {
+  string submission_id = 1;
+  SubmissionStatus status = 2;
+  string error_log = 3;
+  string container_ip = 4;
+  int32 container_port = 5;
+}

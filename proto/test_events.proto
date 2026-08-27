@@ -1,0 +1,31 @@
+syntax = "proto3";
+
+package tradeeval.testevents;
+
+option go_package = "github.com/trade-eval/proto/gen/go/testevents;testeventspb";
+
+// StartTest instructs the bot-fleet to begin generating load against a
+// contestant container.
+message StartTest {
+  string test_id = 1;
+  string contestant_id = 2;
+  string target_ip = 3;
+  int32 target_port = 4;
+  int32 duration_seconds = 5;
+  int32 bot_count = 6;
+  repeated string bot_personas = 7;
+}
+
+// StopTest instructs the bot-fleet to halt all bots for a test.
+message StopTest {
+  string test_id = 1;
+  string reason = 2;
+}
+
+// TestHeartbeat is emitted periodically by the orchestrator while a test
+// is running, for liveness/orphan detection.
+message TestHeartbeat {
+  string test_id = 1;
+  int64 timestamp_ns = 2;
+  int32 active_bots = 3;
+}

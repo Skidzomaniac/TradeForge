@@ -1,0 +1,70 @@
+syntax = "proto3";
+
+package tradeeval.telemetry;
+
+option go_package = "github.com/trade-eval/proto/gen/go/telemetry;telemetrypb";
+
+// OrderType enumerates the kinds of orders bots send.
+enum OrderType {
+  ORDER_TYPE_UNSPECIFIED = 0;
+  LIMIT_BUY = 1;
+  LIMIT_SELL = 2;
+  MARKET_BUY = 3;
+  MARKET_SELL = 4;
+  CANCEL = 5;
+}
+
+// FillStatus enumerates the outcomes of an order.
+enum FillStatus {
+  FILL_STATUS_UNSPECIFIED = 0;
+  FILLED = 1;
+  PARTIAL = 2;
+  REJECTED = 3;
+  PENDING = 4;
+}
+
+// Fill describes the (expected or actual) execution of an order.
+message Fill {
+  double price = 1;
+  double quantity = 2;
+  FillStatus status = 3;
+}
+
+// OrderEvent is emitted by bots on the bot-telemetry topic for every order
+// sent to a contestant. It is the highest-volume message in the platform.
+message OrderEvent {
+  string contestant_id = 1;
+  string test_id = 2;
+  string bot_id = 3;
+  string bot_persona = 4;
+  string order_id = 5;
+  int64 sent_at_ns = 6;
+  int64 acked_at_ns = 7;
+  int64 latency_us = 8;
+  OrderType order_type = 9;
+  double price = 10;
+  double quantity = 11;
+  Fill expected_fill = 12;
+  Fill actual_fill = 13;
+  bool correct = 14;
+  bool timed_out = 15;
+  bool bot_error = 16;
+  int64 sequence_number = 17;
+  // phase is "correctness" for the serialized correctness stream or "load" for
+  // the concurrent throughput/latency stream. Correctness is judged exactly in
+  // the correctness phase and only by hard-violation checks in the load phase.
+  string phase = 18;
+}
+
+// LatencyWindow is an aggregated view of a contestant's performance over a
+// fixed time window, produced by the telemetry-ingester.
+message LatencyWindow {
+  string contestant_id = 1;
+  int64 window_start_ns = 2;
+  int64 window_end_ns = 3;
+  int64 p50_us = 4;
+  int64 p90_us = 5;
+  int64 p99_us = 6;
+  double tps = 7;
+  double correctness_rate = 8;
+}
