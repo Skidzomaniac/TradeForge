@@ -1,0 +1,45 @@
+{
+  "title": "Trade Eval - Platform Overview",
+  "uid": "trade-eval-overview",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "10s",
+  "time": { "from": "now-1h", "to": "now" },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Active Tests",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 0 },
+      "targets": [{ "expr": "sum(bot_fleet_active_tests)", "refId": "A" }]
+    },
+    {
+      "id": 2,
+      "title": "Orders / sec",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 6, "y": 0 },
+      "targets": [{ "expr": "sum(rate(bot_fleet_orders_sent_total[1m]))", "refId": "A" }]
+    },
+    {
+      "id": 3,
+      "title": "Telemetry events dropped /sec",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 6, "x": 18, "y": 0 },
+      "targets": [{ "expr": "rate(bot_fleet_kafka_events_dropped_total[1m])", "refId": "A" }]
+    },
+    {
+      "id": 4,
+      "title": "Order latency p99 (µs)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "targets": [{ "expr": "histogram_quantile(0.99, sum(rate(bot_fleet_order_latency_microseconds_bucket[1m])) by (le))", "refId": "A" }]
+    },
+    {
+      "id": 5,
+      "title": "Active bots",
+      "type": "gauge",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+      "targets": [{ "expr": "sum(bot_fleet_active_bots)", "refId": "A" }]
+    }
+  ]
+}

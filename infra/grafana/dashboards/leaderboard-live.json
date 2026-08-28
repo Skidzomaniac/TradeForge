@@ -1,0 +1,31 @@
+{
+  "title": "Trade Eval - Live Competition",
+  "uid": "trade-eval-live",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "5s",
+  "time": { "from": "now-15m", "to": "now" },
+  "panels": [
+    {
+      "id": 1,
+      "title": "P99 latency by contestant (µs)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "targets": [{ "expr": "histogram_quantile(0.99, sum(rate(bot_fleet_order_latency_microseconds_bucket[1m])) by (le, contestant_id))", "refId": "A" }]
+    },
+    {
+      "id": 2,
+      "title": "Orders sent /sec by contestant",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "targets": [{ "expr": "sum(rate(bot_fleet_orders_sent_total[1m])) by (contestant_id)", "refId": "A" }]
+    },
+    {
+      "id": 3,
+      "title": "Correctness rate by contestant",
+      "type": "bargauge",
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 8 },
+      "targets": [{ "expr": "sum(rate(bot_fleet_orders_correct_total[5m])) by (contestant_id) / sum(rate(bot_fleet_orders_sent_total[5m])) by (contestant_id)", "refId": "A" }]
+    }
+  ]
+}
