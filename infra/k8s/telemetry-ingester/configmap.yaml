@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata: { name: telemetry-ingester-config, namespace: trade-eval }
+data:
+  KAFKA_BROKERS: "kafka:9092"
+  BOT_TELEMETRY_TOPIC: "bot-telemetry"
+  CONSUMER_GROUP_ID: "telemetry-ingesters"
+  TIMESCALE_DSN: "postgres://postgres:postgres@timescaledb:5432/tradeeval?sslmode=disable"
+  REDIS_URL: "redis:6379"
+  TELEMETRY_BATCH_SIZE: "500"
+  REORDER_BUFFER_MS: "100"
+  API_PORT: "8083"

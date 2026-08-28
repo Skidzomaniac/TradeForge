@@ -1,0 +1,6 @@
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata: { name: leaderboard-api, namespace: trade-eval }
+spec:
+  minAvailable: 2
+  selector: { matchLabels: { app: leaderboard-api } }

@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: pact-broker, namespace: trade-eval }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: pact-broker } }
+  template:
+    metadata: { labels: { app: pact-broker } }
+    spec:
+      containers:
+        - name: pact-broker
+          image: pactfoundation/pact-broker:latest
+          ports: [{ containerPort: 9292 }]
+          env:
+            - { name: PACT_BROKER_DATABASE_URL, value: "postgres://postgres:postgres@postgres:5432/pactbroker" }
+---
+apiVersion: v1
+kind: Service
+metadata: { name: pact-broker, namespace: trade-eval }
+spec:
+  selector: { app: pact-broker }
+  ports: [{ port: 9292, targetPort: 9292 }]

@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: leaderboard-api, namespace: trade-eval, labels: { app: leaderboard-api } }
+spec:
+  replicas: 3
+  strategy: { type: RollingUpdate, rollingUpdate: { maxUnavailable: 1 } }
+  selector: { matchLabels: { app: leaderboard-api } }
+  template:
+    metadata: { labels: { app: leaderboard-api } }
+    spec:
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector: { matchLabels: { app: leaderboard-api } }
+                topologyKey: kubernetes.io/hostname
+      containers:
+        - name: leaderboard-api
+          image: ghcr.io/trade-eval/leaderboard-api:latest
+          ports: [{ containerPort: 8084 }]
+          env:
+            - { name: REDIS_URL, value: "redis:6379" }
+            - { name: PORT, value: "8084" }
+          resources:
+            requests: { cpu: "200m", memory: "128Mi" }
+            limits: { cpu: "1000m", memory: "256Mi" }
+          readinessProbe: { httpGet: { path: /v1/health, port: 8084 }, periodSeconds: 5 }

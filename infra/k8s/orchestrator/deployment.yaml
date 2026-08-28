@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: orchestrator
+  namespace: trade-eval
+  labels:
+    app: orchestrator
+spec:
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app: orchestrator
+  template:
+    metadata:
+      labels:
+        app: orchestrator
+    spec:
+      terminationGracePeriodSeconds: 30
+      containers:
+        - name: orchestrator
+          image: ghcr.io/trade-eval/orchestrator:latest
+          ports:
+            - containerPort: 8082
+              name: health
+          envFrom:
+            - configMapRef:
+                name: orchestrator-config
+            - secretRef:
+                name: orchestrator-db-credentials
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "256Mi"
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8082
+            periodSeconds: 10
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: 8082
+            periodSeconds: 5
+            failureThreshold: 2
+          lifecycle:
+            preStop:
+              exec:
+                command: ["sh", "-c", "sleep 15"]

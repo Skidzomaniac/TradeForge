@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bot-fleet
+  namespace: trade-eval
+  labels: { app: bot-fleet }
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: bot-fleet }
+  template:
+    metadata:
+      labels: { app: bot-fleet }
+    spec:
+      terminationGracePeriodSeconds: 40
+      tolerations:
+        - key: dedicated
+          operator: Equal
+          value: bot-fleet
+          effect: NoSchedule
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              preference:
+                matchExpressions:
+                  - { key: workload, operator: In, values: ["bot-fleet"] }
+      containers:
+        - name: bot-fleet
+          image: ghcr.io/trade-eval/bot-fleet:latest
+          ports:
+            - { containerPort: 8082, name: metrics }
+          envFrom:
+            - configMapRef: { name: bot-fleet-config }
+          resources:
+            requests: { cpu: "500m", memory: "256Mi" }
+            limits: { cpu: "2000m", memory: "512Mi" }
+          livenessProbe:
+            httpGet: { path: /healthz, port: 8082 }
+            periodSeconds: 10
+          readinessProbe:
+            httpGet: { path: /readyz, port: 8082 }
+            periodSeconds: 5
+          lifecycle:
+            preStop:
+              exec: { command: ["sh", "-c", "sleep 5"] }

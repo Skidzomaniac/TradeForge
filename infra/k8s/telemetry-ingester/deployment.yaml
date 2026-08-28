@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: telemetry-ingester, namespace: trade-eval, labels: { app: telemetry-ingester } }
+spec:
+  replicas: 3
+  selector: { matchLabels: { app: telemetry-ingester } }
+  template:
+    metadata: { labels: { app: telemetry-ingester } }
+    spec:
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector: { matchLabels: { app: telemetry-ingester } }
+                topologyKey: kubernetes.io/hostname
+      containers:
+        - name: telemetry-ingester
+          image: ghcr.io/trade-eval/telemetry-ingester:latest
+          ports: [{ containerPort: 8083 }]
+          envFrom: [{ configMapRef: { name: telemetry-ingester-config } }]
+          resources:
+            requests: { cpu: "1000m", memory: "512Mi" }
+            limits: { cpu: "2000m", memory: "1Gi" }

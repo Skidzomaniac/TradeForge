@@ -1,0 +1,22 @@
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: bot-fleet
+  namespace: trade-eval
+spec:
+  scaleTargetRef:
+    name: bot-fleet
+  pollingInterval: 5
+  cooldownPeriod: 60
+  minReplicaCount: 0
+  maxReplicaCount: 100
+  advanced:
+    restoreToOriginalReplicaCount: true
+  triggers:
+    - type: kafka
+      metadata:
+        bootstrapServers: kafka:9092
+        consumerGroup: bot-fleet-workers
+        topic: orchestrator-events
+        lagThreshold: "1"
+        offsetResetPolicy: latest

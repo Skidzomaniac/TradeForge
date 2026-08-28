@@ -1,0 +1,22 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata: { name: trade-eval-alerts, namespace: trade-eval, labels: { release: kube-prometheus-stack } }
+spec:
+  groups:
+    - name: trade-eval
+      rules:
+        - alert: KafkaConsumerLagHigh
+          expr: kafka_consumer_group_lag > 100000
+          for: 5m
+          labels: { severity: critical }
+          annotations: { summary: "Kafka consumer lag > 100k for 5m" }
+        - alert: BotFleetEventsDropping
+          expr: increase(bot_fleet_kafka_events_dropped_total[5m]) > 0
+          for: 5m
+          labels: { severity: warning }
+          annotations: { summary: "bot-fleet is dropping telemetry events" }
+        - alert: TestStuck
+          expr: bot_fleet_active_tests > 0 and changes(bot_fleet_active_tests[30m]) == 0
+          for: 30m
+          labels: { severity: warning }
+          annotations: { summary: "A test has been running > 30m" }

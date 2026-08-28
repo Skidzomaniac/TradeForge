@@ -1,0 +1,20 @@
+# build-worker needs to manage contestant pods if it ever uses the k8s API.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata: { name: build-worker, namespace: trade-eval }
+rules:
+  - apiGroups: [""]
+    resources: ["pods", "pods/log"]
+    verbs: ["get", "list", "create", "delete", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata: { name: build-worker, namespace: trade-eval }
+subjects:
+  - kind: ServiceAccount
+    name: build-worker
+    namespace: trade-eval
+roleRef:
+  kind: Role
+  name: build-worker
+  apiGroup: rbac.authorization.k8s.io
