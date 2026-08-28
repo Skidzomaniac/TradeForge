@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "orchestrator.fullname" . }}-config
+  labels:
+    {{- include "orchestrator.labels" . | nindent 4 }}
+data:
+  KAFKA_BROKERS: {{ .Values.kafka.brokers | quote }}
+  ORCHESTRATOR_EVENTS_TOPIC: {{ .Values.kafka.orchestratorEventsTopic | quote }}
+  BOT_FLEET_TOPIC: {{ .Values.kafka.botFleetTopic | quote }}
+  REDIS_URL: {{ .Values.redis.url | quote }}
+  HEARTBEAT_INTERVAL_SECONDS: {{ .Values.config.heartbeatIntervalSeconds | quote }}
+  ORPHAN_DETECTION_INTERVAL_SECONDS: {{ .Values.config.orphanDetectionIntervalSeconds | quote }}
+  AUTO_TRIGGER_TESTS: {{ .Values.config.autoTriggerTests | quote }}
+  TEST_DEFAULT_DURATION_SECONDS: {{ .Values.config.testDefaultDurationSeconds | quote }}
+  TEST_DEFAULT_BOT_COUNT: {{ .Values.config.testDefaultBotCount | quote }}
+  HEALTH_PORT: {{ .Values.service.port | quote }}

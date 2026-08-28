@@ -1,0 +1,19 @@
+prometheus:
+  prometheusSpec:
+    retention: 30d
+    storageSpec:
+      volumeClaimTemplate:
+        spec:
+          storageClassName: gp3
+          resources: { requests: { storage: 50Gi } }
+grafana:
+  adminPassword: "changeme"
+  persistence: { enabled: true, size: 10Gi }
+  dashboardProviders:
+    dashboardproviders.yaml:
+      apiVersion: 1
+      providers:
+        - name: trade-eval
+          folder: "Trade Eval Platform"
+          type: file
+          options: { path: /var/lib/grafana/dashboards/trade-eval }

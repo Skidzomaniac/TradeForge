@@ -1,0 +1,23 @@
+replicaCount: 2
+image:
+  repository: ghcr.io/trade-eval/build-worker
+  pullPolicy: IfNotPresent
+  tag: "latest"
+service:
+  port: 8081
+resources:
+  requests: { cpu: 100m, memory: 128Mi }
+  limits: { cpu: 500m, memory: 256Mi }
+env:
+  KAFKA_BROKERS: "kafka:9092"
+  REDIS_URL: "redis:6379"
+  # Sandbox hardening. The launcher always fails closed on a configured-but-
+  # unreadable profile. With SANDBOX_STRICT=true it additionally treats a missing
+  # seccomp/AppArmor profile or a scan that cannot run as a launch-blocking
+  # failure (ADR-6: controls fail closed). Turn this on once the seccomp profile
+  # is mounted into this pod at SECCOMP_PROFILE and the AppArmor profile named in
+  # APPARMOR_PROFILE is loaded on every node; until then a strict launch fails
+  # every build by design.
+  SANDBOX_STRICT: "false"
+  SECCOMP_PROFILE: "/etc/contestant/seccomp/contestant-profile.json"
+  APPARMOR_PROFILE: "trade-eval-contestant"

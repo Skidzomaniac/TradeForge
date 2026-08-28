@@ -1,0 +1,33 @@
+replicaCount: 2
+image:
+  repository: ghcr.io/trade-eval/orchestrator
+  pullPolicy: IfNotPresent
+  tag: "latest"
+service:
+  type: ClusterIP
+  port: 8082
+resources:
+  limits: { cpu: 500m, memory: 256Mi }
+  requests: { cpu: 100m, memory: 128Mi }
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 5
+  targetCPUUtilizationPercentage: 70
+config:
+  heartbeatIntervalSeconds: 10
+  orphanDetectionIntervalSeconds: 60
+  autoTriggerTests: false
+  testDefaultDurationSeconds: 300
+  testDefaultBotCount: 500
+kafka:
+  brokers: "kafka:9092"
+  orchestratorEventsTopic: "orchestrator-events"
+  botFleetTopic: "orchestrator-events"
+redis:
+  url: "redis:6379"
+postgresql:
+  host: postgres
+  port: 5433
+  database: orchestrator
+  existingSecret: orchestrator-db-credentials

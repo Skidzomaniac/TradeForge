@@ -1,0 +1,6 @@
+replicas: 1
+resources:
+  requests: { memory: 2Gi }
+  limits: { memory: 4Gi }
+volumeClaimTemplate:
+  resources: { requests: { storage: 50Gi } }

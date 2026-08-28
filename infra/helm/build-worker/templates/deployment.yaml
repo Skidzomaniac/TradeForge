@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "build-worker.fullname" . }}
+  labels: {{- include "build-worker.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels: { app: build-worker }
+  template:
+    metadata:
+      labels: {{- include "build-worker.labels" . | nindent 8 }}
+    spec:
+      containers:
+        - name: build-worker
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports: [{ containerPort: {{ .Values.service.port }} }]
+          resources: {{- toYaml .Values.resources | nindent 12 }}
+          {{- with .Values.env }}
+          env:
+            {{- range $k, $v := . }}
+            - name: {{ $k }}
+              value: {{ $v | quote }}
+            {{- end }}
+          {{- end }}

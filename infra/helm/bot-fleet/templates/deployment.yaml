@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "bot-fleet.fullname" . }}
+  labels: {{- include "bot-fleet.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels: { app: bot-fleet }
+  template:
+    metadata:
+      labels: {{- include "bot-fleet.labels" . | nindent 8 }}
+    spec:
+      containers:
+        - name: bot-fleet
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports: [{ containerPort: {{ .Values.service.port }} }]
+          resources: {{- toYaml .Values.resources | nindent 12 }}
+          readinessProbe:
+            httpGet: { path: /readyz, port: {{ .Values.service.port }} }
+            periodSeconds: 5

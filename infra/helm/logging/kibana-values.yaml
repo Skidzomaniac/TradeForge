@@ -1,0 +1,4 @@
+service: { type: ClusterIP }
+ingress:
+  enabled: true
+  hosts: ["kibana.trade-eval.local"]

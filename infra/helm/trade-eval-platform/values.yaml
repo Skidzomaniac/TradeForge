@@ -1,0 +1,11 @@
+global:
+  imageRegistry: ""
+  environment: production
+kafka:
+  enabled: true
+  brokers: "kafka:9092"
+redis:
+  enabled: true
+  url: "redis:6379"
+keda:
+  enabled: true

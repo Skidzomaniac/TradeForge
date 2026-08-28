@@ -1,0 +1,8 @@
+orchestrator deployed as {{ include "orchestrator.fullname" . }}.
+
+Check logs:
+  kubectl logs -n {{ .Release.Namespace }} -l app=orchestrator -f
+
+List active tests on a pod:
+  kubectl exec -n {{ .Release.Namespace }} deploy/{{ include "orchestrator.fullname" . }} -- \
+    wget -qO- http://localhost:{{ .Values.service.port }}/admin/active-tests

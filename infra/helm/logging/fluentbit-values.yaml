@@ -1,0 +1,22 @@
+config:
+  inputs: |
+    [INPUT]
+        Name              tail
+        Path              /var/log/containers/*trade-eval*.log
+        Parser            docker
+        Tag               trade-eval.*
+        Mem_Buf_Limit     50MB
+  filters: |
+    [FILTER]
+        Name                kubernetes
+        Match               trade-eval.*
+        Merge_Log           On
+        K8S-Logging.Parser  On
+  outputs: |
+    [OUTPUT]
+        Name            es
+        Match           trade-eval.*
+        Host            elasticsearch.logging
+        Port            9200
+        Logstash_Format On
+        Logstash_Prefix trade-eval

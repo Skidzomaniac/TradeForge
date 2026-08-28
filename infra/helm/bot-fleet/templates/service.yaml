@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "bot-fleet.fullname" . }}
+  labels: {{- include "bot-fleet.labels" . | nindent 4 }}
+spec:
+  selector: { app: bot-fleet }
+  ports: [{ port: {{ .Values.service.port }}, targetPort: {{ .Values.service.port }} }]

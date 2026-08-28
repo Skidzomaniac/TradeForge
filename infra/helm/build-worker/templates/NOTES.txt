@@ -1,0 +1,1 @@
+build-worker deployed. Logs: kubectl logs -n {{ .Release.Namespace }} -l app=build-worker -f

@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "leaderboard-api.fullname" . }}
+  labels: {{- include "leaderboard-api.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels: { app: leaderboard-api }
+  template:
+    metadata:
+      labels: {{- include "leaderboard-api.labels" . | nindent 8 }}
+    spec:
+      containers:
+        - name: leaderboard-api
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports: [{ containerPort: {{ .Values.service.port }} }]
+          resources: {{- toYaml .Values.resources | nindent 12 }}
+          readinessProbe:
+            httpGet: { path: /v1/health, port: {{ .Values.service.port }} }
+            periodSeconds: 5

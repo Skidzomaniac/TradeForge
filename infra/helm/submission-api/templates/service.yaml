@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "submission-api.fullname" . }}
+  labels: {{- include "submission-api.labels" . | nindent 4 }}
+spec:
+  selector: { app: submission-api }
+  ports: [{ port: {{ .Values.service.port }}, targetPort: {{ .Values.service.port }} }]
