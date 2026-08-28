@@ -1,0 +1,10 @@
+{
+  "name": "TradeForge",
+  "short_name": "TradeForge",
+  "description": "Live trading infrastructure evaluation leaderboard",
+  "theme_color": "#0a0a0a",
+  "background_color": "#0a0a0a",
+  "display": "standalone",
+  "start_url": "/",
+  "icons": [{ "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml" }]
+}
