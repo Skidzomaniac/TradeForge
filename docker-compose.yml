@@ -217,7 +217,7 @@ services:
     restart: "no"
     volumes:
       - ./services/telemetry-ingester/migrations:/migrations/timescale:ro
-      - ./services/orchestrator/migrations:/migrations/orchestrator:ro
+      - ./services/submission-api/migrations:/migrations/orchestrator:ro
       - ./scripts/local-dev/seed.sql:/seed.sql:ro
     entrypoint: >
       /bin/sh -c "

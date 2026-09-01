@@ -419,43 +419,16 @@ artifacts. Each store is used for the one job it is best at.
 
 ---
 
-## 12. Infrastructure as Code
+## 12. Local Development Stack
 
 The platform is reproducible from code, not from manual setup.
 
 - **Docker Compose** brings up the full single-host stack (infrastructure, every
-  service, and the frontend) for development, plus an infrastructure-only variant for
-  running services by hand.
-- **Helm charts**, one per service, parameterize the Kubernetes deployment, including
-  resource requests and limits, horizontal pod autoscaling for the bot fleet and
-  ingester, and the security context for each pod.
-- **Raw Kubernetes manifests** cover the cross-cutting concerns: namespaces with a
-  PodSecurity baseline, default-deny network policies for the contestant namespace,
-  monitoring (ServiceMonitors and alert rules), tracing (an OpenTelemetry collector and
-  a tracing backend), and logging.
-- **Terraform** provisions the cloud substrate, with remote state encrypted in object
-  storage and locked, and workload identity so that no long-lived cloud credentials live
-  in pods.
+  service, and the frontend), plus an infrastructure-only variant for running services
+  by hand with `go run`.
 
-Sandbox controls are also code: the seccomp profile, the AppArmor profile, and the
-network policies are versioned alongside the services they protect.
-
----
-
-## 13. CI/CD Pipeline
-
-Three pipelines guard the main branch.
-
-- **Continuous integration** runs static analysis and the test matrix across every Go
-  module, type-checks and builds the frontend, and on the main branch builds and pushes
-  the service images.
-- **Integration** brings up the full stack, waits for health, runs an end-to-end script
-  that exercises the upload-to-score pipeline, and tears down.
-- **Security** runs image vulnerability scanning, static security analysis, and
-  dependency auditing on every push to main and on a schedule.
-
-Every Go module is pinned to the same toolchain version, and the linter configuration is
-shared, so a green CI run means the same thing everywhere.
+Sandbox controls are also code: the seccomp profile is versioned alongside the
+services it protects.
 
 ---
 
@@ -636,7 +609,6 @@ The following principles govern the platform's architecture and scoring model.
 - **Relative scoring for a live leaderboard.** Min-max normalization scores each
   contestant relative to the current field, which is the correct model for a live
   competitive leaderboard. The final ranking is captured at the freeze point.
-- **Two deployment targets.** The Compose stack provides a fully functional development
-  environment. The Kubernetes deployment provides production-grade isolation,
-  autoscaling, network policies, and pod security profiles. Both targets are
-  provisioned as code and tested in CI.
+- **Reproducible local stack.** The Docker Compose stack provides a fully functional
+  environment that mirrors the full service topology. All infrastructure (Kafka, Redis,
+  Postgres, TimescaleDB, MinIO) runs as containers alongside the application services.

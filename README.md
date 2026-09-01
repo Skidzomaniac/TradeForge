@@ -30,8 +30,6 @@ The whole stack runs locally with Docker Compose and is built to run on Kubernet
 - [Security model](#security-model)
 - [Additional features](#additional-features)
 - [Observability](#observability)
-- [Continuous integration](#continuous-integration)
-- [Contest day runbook](#contest-day-runbook)
 
 ## How it works
 
@@ -117,12 +115,7 @@ React frontend (live rankings)
 ├── tests/                 Cross-service correctness and integration tests
 ├── scripts/               Local dev, migration, smoke test, verification scripts
 ├── infra/
-│   ├── docker/            Sandbox seccomp and AppArmor profiles, nginx
-│   ├── helm/              Helm charts per service
-│   ├── k8s/               Raw manifests, network policies, monitoring, tracing
-│   ├── kafka/             Topic creation and tuning notes
-│   ├── grafana/           Dashboards
-│   └── terraform/         Cloud provisioning
+│   └── docker/            Sandbox seccomp profiles, nginx
 ├── docker-compose.yml     Full local stack
 ├── docker-compose.dev.yml Infra-only stack for running services with `go run`
 ├── Makefile               Developer commands
@@ -514,21 +507,15 @@ all mandatory and a missing one fails the build (ADR-6).
 CRITICAL finding blocks the launch. In strict mode a scan that cannot run (Trivy missing,
 or the scan errors) also blocks. In non-strict dev a missing scanner logs and continues.
 
-**Enforced in Kubernetes** (the production boundary): a default-deny `NetworkPolicy`
-that blocks all egress and allows ingress only from the bot fleet on port 8080
-(`infra/k8s/network-policies/contestant-netpol.yaml`), plus a PodSecurity `baseline`
-namespace (`infra/k8s/security/`). **This network isolation is the control that matters
-most**: even if every other layer is bypassed, a compromised container has no network
-path to Kafka, Redis, Postgres, or MinIO.
+**Network isolation.** The contestant container is attached only to an internal Docker
+network (`internal: true` in Compose) that has no route to the host or external
+networks. The bot fleet and build-worker are dual-homed: they sit on both the internal
+contestant network and the platform network. The contestant container is never placed
+on the platform network, so even if every other layer is bypassed, a compromised
+container has no network path to Kafka, Redis, Postgres, or MinIO.
 
 **Runtime monitoring** (`security/resource_monitor.go`): the build worker watches the
 container after launch and alerts on a soft memory threshold and abusive behavior.
-
-> **Compose vs. production.** AppArmor and `SANDBOX_STRICT` are left off in the dev
-> Compose stack because a dev host may not have the AppArmor profile loaded. The contest
-> boundary is the Kubernetes deployment: load the profiles on the nodes, mount the
-> seccomp JSON into the build-worker pod, and set `SANDBOX_STRICT=true`
-> (`infra/helm/build-worker/values.yaml`).
 
 ### Scoring integrity
 
@@ -545,9 +532,7 @@ for manual review.
 - Per-contestant submission rate limit and per-IP leaderboard rate limit.
 - Zip-slip guard and bounded extraction size on uploads.
 - Constant-time comparison for admin and internal keys (`crypto/subtle`).
-- IAM Roles for Service Accounts, so no long-lived cloud keys live in pods.
-- Terraform remote state encrypted in S3 with DynamoDB locking.
-- Secrets sourced from a secrets manager, never committed.
+- Secrets should be sourced from a secrets manager, never committed.
 
 ## Additional features
 
@@ -564,9 +549,7 @@ plus `/healthz` and `/readyz`:
   by the lag monitor.
 - leaderboard-api: a WebSocket-connections gauge.
 
-Grafana dashboards live in `infra/grafana/dashboards`, ServiceMonitors and alert rules
-in `infra/k8s/monitoring`, Jaeger and an OpenTelemetry collector in `infra/k8s/tracing`,
-and Fluent Bit, Elasticsearch, and Kibana values in `infra/helm/logging`.
+Metrics can be scraped by Prometheus and visualized in Grafana.
 
 **Anomaly detection** (`anomaly/ml_detector.go`): a Welford online z-score per
 contestant flags latency outliers against that contestant's own baseline. A behavior
@@ -628,62 +611,4 @@ Each service prints structured JSON logs. The key dimensions are `service`,
 `request_id`, `contestant_id`, and `test_id`, which lets you trace one test run across
 every service.
 
-## Continuous integration
 
-Three GitHub Actions workflows live in `.github/workflows/`:
-
-- `ci.yml`: runs `go vet` across services, the Go test matrix, frontend type-check and
-  build, then builds and pushes images to the container registry on the main branch.
-- `integration.yml`: brings up the full Compose stack, waits for health, runs the
-  end-to-end integration script, and tears down.
-- `security.yml`: Trivy image scanning, gosec static analysis, and dependency auditing
-  on a push to main and on a weekly schedule.
-
-## Contest day runbook
-
-### Twenty-four hours before
-
-- `make test` is green across all modules and the frontend.
-- `make build` succeeds for every image.
-- `docker compose config` validates.
-- Contestants are seeded (`make seed`) and API keys distributed.
-- Kafka topic partition counts confirmed (`infra/kafka/topics.sh`).
-- Smoke test passes on staging (`make smoke-test`).
-
-### One hour before
-
-- All pods running: `kubectl get pods -n trade-eval`.
-- Kafka consumer lag near zero: `make check-kafka-lag`.
-- TimescaleDB and Redis reachable.
-- Bot fleet scaled to zero: `kubectl get hpa bot-fleet -n trade-eval`.
-
-### Start
-
-1. Announce submissions are open.
-2. Watch the first builds drain, under 60 seconds each.
-3. Run `bash scripts/verify-platform.sh`.
-
-### Every fifteen minutes during
-
-- Kafka consumer lag under 1000.
-- No OOMKilled events.
-- Leaderboard `updated_at` is fresh.
-- No error logs in submission-api or orchestrator.
-
-### Incident response
-
-- Leaderboard stale: check leaderboard-api logs and the Redis `leaderboard:cached`
-  key, then `kubectl rollout restart deployment/leaderboard-api`.
-- Build stuck for more than five minutes: check build-worker logs and the Docker
-  daemon.
-- Kafka lag growing: `kubectl scale deployment telemetry-ingester --replicas=6`.
-- Orchestrator crash: Kubernetes restarts it and orphan detection recovers running
-  tests within about 60 seconds. Confirm none are stuck running via
-  `/admin/active-tests`.
-
-### Close
-
-1. Wait for active tests to finish.
-2. Freeze the leaderboard: `POST /admin/v1/leaderboard/freeze` with the admin key.
-3. Export results and announce winners.
-4. Scale the bot fleet to zero: `kubectl scale deployment bot-fleet --replicas=0`.

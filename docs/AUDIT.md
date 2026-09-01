@@ -246,7 +246,7 @@ Each decision below is verified in code:
 
 | Design doc claim | Status | Where |
 |---|---|---|
-| Network isolation is the primary control | Enforced (K8s) | `infra/k8s/network-policies/contestant-netpol.yaml` (deny-all egress, ingress only from bot-fleet:8080); Compose internal network |
+| Network isolation is the primary control | Enforced | Docker Compose internal network (`internal: true`); contestant containers have no route to platform services |
 | seccomp profile, fail-closed | Enforced | `sandbox.go` `buildSecurityOpt`; applied in Compose |
 | AppArmor applied at launch | Wired | `sandbox.go` `buildSecurityOpt` (`apparmor=<name>`) |
 | caps dropped, no-new-priv, read-only fs, non-root user | Enforced | `build-worker/sandbox.go` (`CapDrop: ALL`, `no-new-privileges`, `ReadonlyRootfs`, `User: 65534:65534`) |
@@ -264,33 +264,24 @@ Each decision below is verified in code:
 | horizontal fan-out via Redis pub/sub | Implemented | `scorer.go`, `pubsub/redis_subscriber.go` |
 | non-blocking hub drops slow clients | Implemented + tested | `hub/websocket_hub.go`, `hub/websocket_hub_test.go` |
 | chaos: mock server, restarts, backpressure | Partial | `bot-fleet/chaos/`, `scripts/chaos/` |
-| IaC: Compose, Helm, K8s, Terraform | Implemented | `infra/` |
-| three CI pipelines | Implemented | `.github/workflows/{ci,integration,security}.yml` |
+| IaC: Docker Compose | Implemented | `docker-compose.yml`, `docker-compose.dev.yml` |
 | ADR-6: controls fail closed | Implemented | `sandbox.go` `buildSecurityOpt`; strict mode via `SANDBOX_STRICT` |
 
 ---
 
 ## Deployment Configuration
 
-### Development (Docker Compose)
+### Deployment (Docker Compose)
 
-The dev Compose stack applies caps-drop, no-new-priv, read-only-fs, non-root
+The Compose stack applies caps-drop, no-new-priv, read-only-fs, non-root
 user, resource caps, internal-network, and seccomp. This provides a fully
-functional development environment that mirrors the production topology.
-
-### Production (Kubernetes)
-
-The production deployment adds `SANDBOX_STRICT=true`, AppArmor profile
-enforcement, default-deny NetworkPolicy, and PodSecurity baseline. The Helm
-values stage all controls; the operational step is mounting the seccomp and
-AppArmor profiles onto the nodes and enabling strict mode.
+functional environment that mirrors the full service topology.
 
 ### Chaos and Resilience Testing
 
 The mock server and circuit-breaker chaos tests validate contestant failure
 handling (`bot-fleet/chaos/`). Shell experiments in `scripts/chaos/` exercise
-pod-restart and ingester-backpressure scenarios. All Go modules are pinned to
-`go 1.26.0` and the CI image provides a matching toolchain.
+restart and ingester-backpressure scenarios.
 
 ---
 
@@ -300,8 +291,7 @@ The trustworthiness core (reference matching, two-phase correctness,
 ordering-independent hard-violation checks, bounded-memory percentiles,
 at-least-once telemetry, and horizontally scalable fan-out) is fully implemented,
 wired end to end, and tested. The sandbox security posture fails closed on
-confinement profiles, runs the contestant as a non-root user, and enforces
-seccomp/AppArmor/image-scan under `SANDBOX_STRICT`. All six Go modules and the
-frontend type-check, build, and pass their test suites. The CI pipelines verify
-the full matrix on every push.
+confinement profiles and runs the contestant as a non-root user with seccomp
+enforcement. All six Go modules and the frontend type-check, build, and pass
+their test suites.
 

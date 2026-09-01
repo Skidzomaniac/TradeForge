@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"strconv"
 	"time"
 
 	"github.com/redis/go-redis/v9"
@@ -71,4 +72,14 @@ func (mw *MetricsWriter) readWindow(ctx context.Context, contestantID string) (L
 		TPS:             atof(m["tps"]),
 		CorrectnessRate: atof(m["correctness_rate"]),
 	}, m["contestant_name"]
+}
+
+func atoiI64(s string) int64 {
+	v, _ := strconv.ParseInt(s, 10, 64)
+	return v
+}
+
+func atof(s string) float64 {
+	v, _ := strconv.ParseFloat(s, 64)
+	return v
 }
